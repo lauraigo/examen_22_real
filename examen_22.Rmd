@@ -1,0 +1,198 @@
+---
+title: "examen_real_2022"
+author: "Laura Ibarra"
+date: "31/1/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Examen Bioinformatica
+
+### Ejercicio 1 - LInux
+
+a. ¿Cuantas palabra hay en el fichero?
+cat genes.txt | wc 
+
+b. ¿Cómo cambiarías todos los tabulados por guiones ?
+cat genes.txt | sed s'/\t/-/g'
+
+c. ¿Cómo cambiarías solo la primera aparición?
+cat genes.txt | sed s'/g/G/'
+
+d. ¿Cómo buscarías todos los genes excepto el llamado DSTYK?
+cat genes.txt | grep -v  'DSTYK'
+
+### Ejercicio 2 - Rstudio
+
+```{r}
+library(nycflights13)
+library(tidyverse)
+
+weather <- nycflights13::weather
+```
+
+2.a ¿Cuántas columnas y cuántos registros tiene este dataset?
+```{r}
+ncol(weather)
+nrow(weather)
+```
+
+
+2.b ¿Cuántos “origin” diferentes existen y para cada uno de ellos cuántos registros hay?
+
+```{r}
+table(weather$origin)
+```
+
+2.c En LGA, ¿cuáles fueron la mediana del wind_speed y media de pressure?
+
+```{r}
+LGA <- weather[weather$origin == "LGA",]
+median(LGA$wind_speed, na.rm = T)
+mean(LGA$pressure, na.rm = T)
+```
+
+
+2.d  Después de eliminar los NA de la columna wind_gust, calcula para cada mes la media de wind_speed y wind_gust, y el número de casos.
+
+```{r}
+library(dplyr)
+weather1<- mutate_at(weather, "wind_gust", ~replace(., is.na(.), 0))
+
+#Para cada mes
+mes1 <- weather1[weather1$month == 1,]
+mes2 <- weather1[weather1$month == 2,]
+mes3 <- weather1[weather1$month == 3,]
+mes4 <- weather1[weather1$month == 4,]
+mes5 <- weather1[weather1$month == 5,]
+mes6 <- weather1[weather1$month == 6,]
+mes7 <- weather1[weather1$month == 7,]
+mes8 <- weather1[weather1$month == 8,]
+mes9 <- weather1[weather1$month == 9,]
+mes10 <- weather1[weather1$month == 10,]
+mes11 <- weather1[weather1$month == 11,]
+mes12 <- weather1[weather1$month == 12,]
+
+media_wind_gust <- function(data)
+{
+  mean(data$wind_gust, na.rm = T)
+}
+
+media_wind_speed <- function(data)
+{
+  mean(data$wind_speed, na.rm = T) 
+}
+
+num_casos <- function(data)
+{
+  nrow(data)
+}
+
+medias <- function(data)
+{
+  a <- num_casos(data)
+  b <- media_wind_gust(data)
+  c <- media_wind_speed(data)
+  print(paste0("casos:",a," ","wind_gust:",b, " ","wind_speed:", c))
+}
+
+medias(mes12)
+medias(mes11)
+medias(mes10)
+medias(mes9)
+medias(mes8)
+medias(mes7)
+medias(mes6)
+medias(mes5)
+medias(mes4)
+medias(mes3)
+medias(mes2)
+medias(mes1)
+```
+
+
+### Ejercicio 3
+
+3.a Crea el plot anterior
+```{r}
+JFK <- weather[weather$origin == "JFK",]
+LGA <- weather[weather$origin == "LGA",]
+EWR <- weather[weather$origin == "EWR",]
+
+par(mfrow = c(1,3))
+boxplot(EWR$temp ~ EWR$month,
+        col = "pink",
+        ylab = "ºF",
+        xlab = "months",
+        main = "Temperatura:EWR",)
+boxplot(JFK$temp ~ JFK$month,
+        col = "green",
+        ylab = "ºF",
+        xlab = "months",
+        main = "Temperatura:JFK",)
+boxplot(LGA$temp ~ LGA$month,
+        col = "blue",
+        ylab = "ºF",
+        xlab = "months",
+        main = "Temperatura:LGA",)
+
+```
+
+
+3.b Crea funcion que plot lo anterior
+```{r}
+plot_meteo <-function(data1,data2,data3, meteo1,meteo2,meteo3,titulo1, titulo2,titulo3,unidad)
+{
+  par(mfrow = c(1,3))
+  boxplot(meteo1 ~ data1$month,col="pink", main = titulo1,xlab="months",ylab= unidad,)
+  boxplot(meteo2 ~ data2$month,col="green", main = titulo2,xlab="months",ylab= unidad,)
+  boxplot(meteo3 ~ data3$month,col="blue", main = titulo3,xlab="months",ylab= unidad,)
+}
+plot_meteo(EWR, LGA,JFK, EWR$temp, LGA$temp, JFK$temp, "EWR", "LGA", "JFK", "ºF")
+
+```
+
+
+### Ejercicio 4 - El dia de tu cumpleaños
+
+4.a Correlacion temperatura y humedad en cada uno de los origenes
+
+```{r}
+dia_cumpleaños <- filter(weather, month == 3, day ==13)
+
+cor <- cor(dia_cumpleaños$temp, dia_cumpleaños$humid)
+
+print(paste0("Con un valor de ", cor, " podemos decir que hay una relación inversa entre la temperatura y la humedad en el día 13 de Marzo."))
+```
+
+
+4.b Si comparas la temperatura en JFK y LGA ¿Son estadisticamente diferentes? ¿P_valor? Plotea.
+```{r}
+ggplot(data= dia_cumpleaños)+
+  geom_line(mapping = aes(temp, humid, col= origin))+
+  ggtitle("13 de marzo")
+```
+
+
+### Ejercicio 5
+5.a ¿Cual es el punto FC mas grande en valor absoluto?
+EL punto FC mas grande en valor absoluto es el que se encuentra a la izquierda en el eje X = logfc.
+
+5.b ¿Que gen sobreexpresado es el más signficativo?
+El gen sobreexpresado más significativo es "Rbp1" porque presenta mayor valor de log o lo que es lo mismo menor valor de p ya que se relacionan inversamente y a menor valor de p el resultado es mas significativo.
+
+
+### Ejercicio 6 
+
+Sube el examen a github y escribe a continuación tu url aquí.
+
+
+### Ejercicio 7
+Acaba el documento con el comando sessionInfo()
+
+
+
+
